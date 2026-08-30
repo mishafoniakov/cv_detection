@@ -1,0 +1,16 @@
+# Python 3.11 (см. metadata ноутбуков)
+
+# Общие
+numpy
+pandas
+matplotlib
+jupyter
+
+# Классификация цветов (notebooks/cv_flowers.ipynb)
+tensorflow
+scikit-learn
+
+# Детекция животных (notebooks/cv_detection.ipynb)
+opencv-python
+ultralytics
+kagglehub

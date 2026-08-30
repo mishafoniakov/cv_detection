@@ -1,0 +1,29 @@
+name: Validate notebooks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  notebooks-json:
+    name: Notebooks are valid JSON
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Parse .ipynb files
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          notebooks = sorted(Path("notebooks").glob("*.ipynb"))
+          assert notebooks, "No notebooks found in notebooks/"
+          for path in notebooks:
+              nb = json.loads(path.read_text(encoding="utf-8"))
+              assert "cells" in nb, path
+              print(f"OK  {path}  ({len(nb['cells'])} cells)")
+          PY
