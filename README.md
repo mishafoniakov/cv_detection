@@ -1,12 +1,13 @@
 # Computer Vision
 
-Классификация цветов и детекция животных.
+Классификация цветов, классификация овощей и детекция животных.
 
-Репозиторий собран как портфолио-проект: два самостоятельных Jupyter-ноутбука, воспроизводимый запуск и явные инструкции по данным. Код экспериментов не переписывался — изменена только обвязка репозитория.
+Репозиторий собран как портфолио-проект: самостоятельные Jupyter-ноутбуки, воспроизводимый запуск и явные инструкции по данным.
 
 | Задача | Модель | Данные | Результат |
 | --- | --- | --- | --- |
 | Классификация цветов | MobileNetV2 + свой классификатор (Keras) | TensorFlow Flowers (`flower_photos`) | **85.56%** accuracy на тесте |
+| Классификация овощей | CNN (Conv2D 32-64-128, Keras) | [Vegetable Image Dataset](https://www.kaggle.com/datasets/misrakahmed/vegetable-image-dataset) | 15 классов, обучение с диска через kagglehub |
 | Детекция животных | YOLOv8n (Ultralytics) | [Animals-10](https://www.kaggle.com/datasets/alessiocorrado99/animals10) | bounding boxes + подсчёт объектов |
 
 Python **3.11**.
@@ -20,11 +21,14 @@ Python **3.11**.
 - [Быстрый старт](#быстрый-старт)
 - [Ноутбук 1. Классификация цветов](#ноутбук-1-классификация-цветов)
 - [Ноутбук 2. Детекция животных](#ноутбук-2-детекция-животных)
+- [Ноутбук 3. Классификация овощей](#ноутбук-3-классификация-овощей)
 - [Зависимости](#зависимости)
 
 ## Что внутри
 
-**Классификация.** Transfer learning на MobileNetV2: веса backbone заморожены, сверху — полносвязная голова. Датасет делится 80/20, обучение 20 эпох, затем оценка и инференс на отдельных фото.
+**Классификация цветов.** Transfer learning на MobileNetV2: веса backbone заморожены, сверху — полносвязная голова. Датасет делится 80/20, обучение 20 эпох, затем оценка и инференс на отдельных фото.
+
+**Классификация овощей.** Своя CNN на Keras: 15 классов Vegetable Image Dataset, 200 фото на класс, аугментация в модели, обучение 10 эпох.
 
 **Детекция.** Предобученный YOLOv8n на изображении из Animals-10: визуализация боксов, подсчёт объектов по классам и обёртка `ImageDetectionYOLO` для прогона по папке.
 
@@ -40,6 +44,7 @@ cv_detection/
 └── notebooks/
     ├── cv_flowers.ipynb      # классификация цветов
     ├── cv_detection.ipynb    # детекция животных
+    ├── detect_goods.ipynb    # классификация овощей
     ├── flower_photos/        # датасет цветов (скачать отдельно)
     ├── model/                # веса MobileNetV2 (скачать отдельно)
     └── test_images/          # test_1.jpg … test_3.jpg для инференса
@@ -85,6 +90,10 @@ curl -L "https://storage.googleapis.com/tensorflow/keras-applications/mobilenet_
 
 Animals-10 скачивается из ячейки через `kagglehub` (`alessiocorrado99/animals10`). Веса `yolov8n.pt` подтягивает Ultralytics при первом запуске. Для Kaggle может понадобиться [API-токен](https://github.com/Kaggle/kagglehub).
 
+### Данные для классификации овощей
+
+Vegetable Image Dataset скачивается из ячейки `detect_goods.ipynb` через `kagglehub` (`misrakahmed/vegetable-image-dataset`).
+
 ## Ноутбук 1. Классификация цветов
 
 Файл: [`notebooks/cv_flowers.ipynb`](notebooks/cv_flowers.ipynb)
@@ -112,11 +121,27 @@ Animals-10 скачивается из ячейки через `kagglehub` (`ale
 4. Класс `ImageDetectionYOLO`: подготовка кадра, инференс, визуализация
 5. Прогон по первым 10 изображениям папки
 
+## Ноутбук 3. Классификация овощей
+
+Файл: [`notebooks/detect_goods.ipynb`](notebooks/detect_goods.ipynb)
+
+Пайплайн:
+
+1. Скачивание Vegetable Image Dataset через `kagglehub`
+2. Загрузка до 200 фото на класс, ресайз 128×128, нормализация в `float32`
+3. Split 80/20 (`random_state=42`, `stratify`)
+4. CNN: Conv2D 32-64-128 + MaxPool, Dense(128), Dropout, softmax на 15 классов
+5. Аугментация слоями Keras (`RandomFlip`, `RandomRotation`, `RandomZoom`)
+6. Adam, `sparse_categorical_crossentropy`, 10 эпох, оценка и инференс на тесте
+
+На Python 3.14 ноутбук идёт через Keras 3 + PyTorch: пакет TensorFlow для этой версии интерпретатора недоступен.
+
 ## Зависимости
 
 Список пакетов — в [`requirements.txt`](requirements.txt). Основные:
 
-- классификация: TensorFlow / Keras, scikit-learn, NumPy, pandas, Matplotlib
+- классификация цветов: TensorFlow / Keras, scikit-learn, NumPy, pandas, Matplotlib
+- классификация овощей: Keras, PyTorch, scikit-learn, kagglehub, Pillow
 - детекция: Ultralytics, OpenCV, kagglehub
 
 Датасеты и веса в git не входят (см. [`.gitignore`](.gitignore)).

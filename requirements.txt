@@ -14,3 +14,9 @@ scikit-learn
 opencv-python
 ultralytics
 kagglehub
+
+# Классификация овощей (notebooks/detect_goods.ipynb)
+# На Python 3.14 TensorFlow недоступен — ноутбук использует Keras 3 + PyTorch.
+keras
+torch
+pillow
