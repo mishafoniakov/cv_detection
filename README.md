@@ -1,6 +1,6 @@
 # Computer Vision
 
-Классификация цветов, классификация овощей и детекция животных.
+Классификация цветов, классификация овощей, детекция животных и детекция объектов.
 
 Репозиторий собран как портфолио-проект: самостоятельные Jupyter-ноутбуки, воспроизводимый запуск и явные инструкции по данным.
 
@@ -9,6 +9,7 @@
 | Классификация цветов | MobileNetV2 + свой классификатор (Keras) | TensorFlow Flowers (`flower_photos`) | **85.56%** accuracy на тесте |
 | Классификация овощей | CNN (Conv2D 32-64-128, Keras) | [Vegetable Image Dataset](https://www.kaggle.com/datasets/misrakahmed/vegetable-image-dataset) | 15 классов, обучение с диска через kagglehub |
 | Детекция животных | YOLOv8n (Ultralytics) | [Animals-10](https://www.kaggle.com/datasets/alessiocorrado99/animals10) | bounding boxes + подсчёт объектов |
+| Детекция объектов | Haar Cascade (OpenCV) | номера авто, морды котов, настенные часы | bounding boxes на тестовых фото |
 
 Python **3.11**.
 
@@ -22,6 +23,7 @@ Python **3.11**.
 - [Ноутбук 1. Классификация цветов](#ноутбук-1-классификация-цветов)
 - [Ноутбук 2. Детекция животных](#ноутбук-2-детекция-животных)
 - [Ноутбук 3. Классификация овощей](#ноутбук-3-классификация-овощей)
+- [Ноутбук 4. Детекция объектов](#ноутбук-4-детекция-объектов)
 - [Зависимости](#зависимости)
 
 ## Что внутри
@@ -30,7 +32,9 @@ Python **3.11**.
 
 **Классификация овощей.** Своя CNN на Keras: 15 классов Vegetable Image Dataset, 200 фото на класс, аугментация в модели, обучение 10 эпох.
 
-**Детекция.** Предобученный YOLOv8n на изображении из Animals-10: визуализация боксов, подсчёт объектов по классам и обёртка `ImageDetectionYOLO` для прогона по папке.
+**Детекция животных.** Предобученный YOLOv8n на изображении из Animals-10: визуализация боксов, подсчёт объектов по классам и обёртка `ImageDetectionYOLO` для прогона по папке.
+
+**Детекция объектов.** Классические Haar-каскады OpenCV: автомобильные номера, морды котов и настенные часы.
 
 ## Структура
 
@@ -45,6 +49,9 @@ cv_detection/
     ├── cv_flowers.ipynb      # классификация цветов
     ├── cv_detection.ipynb    # детекция животных
     ├── detect_goods.ipynb    # классификация овощей
+    ├── object_detection.ipynb  # Haar-каскады: номера, коты, часы
+    ├── haarcascade_*.xml     # каскады для object_detection
+    ├── number_*.jpg cat_*.jpg clock*.jpg
     ├── flower_photos/        # датасет цветов (скачать отдельно)
     ├── model/                # веса MobileNetV2 (скачать отдельно)
     └── test_images/          # test_1.jpg … test_3.jpg для инференса
@@ -94,6 +101,10 @@ Animals-10 скачивается из ячейки через `kagglehub` (`ale
 
 Vegetable Image Dataset скачивается из ячейки `detect_goods.ipynb` через `kagglehub` (`misrakahmed/vegetable-image-dataset`).
 
+### Данные для детекции объектов
+
+Для `object_detection.ipynb` в `notebooks/` уже лежат Haar-каскады и тестовые фото (`number_*.jpg`, `cat_*.jpg`, `clock*.jpg`). Дополнительно ничего скачивать не нужно.
+
 ## Ноутбук 1. Классификация цветов
 
 Файл: [`notebooks/cv_flowers.ipynb`](notebooks/cv_flowers.ipynb)
@@ -136,13 +147,27 @@ Vegetable Image Dataset скачивается из ячейки `detect_goods.i
 
 На Python 3.14 ноутбук идёт через Keras 3 + PyTorch: пакет TensorFlow для этой версии интерпретатора недоступен.
 
+## Ноутбук 4. Детекция объектов
+
+Файл: [`notebooks/object_detection.ipynb`](notebooks/object_detection.ipynb)
+
+Пайплайн:
+
+1. Haar Cascade для российских автомобильных номеров
+2. Haar Cascade для морды кота (`haarcascade_frontalcatface.xml`)
+3. Предобработка кадра и детекция настенных часов
+4. Отрисовка bounding boxes на тестовых JPEG рядом с ноутбуком
+
+Каскады и фото лежат в `notebooks/`, пути в ячейках относительные.
+
 ## Зависимости
 
 Список пакетов — в [`requirements.txt`](requirements.txt). Основные:
 
 - классификация цветов: TensorFlow / Keras, scikit-learn, NumPy, pandas, Matplotlib
 - классификация овощей: Keras, PyTorch, scikit-learn, kagglehub, Pillow
-- детекция: Ultralytics, OpenCV, kagglehub
+- детекция животных: Ultralytics, OpenCV, kagglehub
+- детекция объектов: OpenCV, Matplotlib
 
 Датасеты и веса в git не входят (см. [`.gitignore`](.gitignore)).
 
