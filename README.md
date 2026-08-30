@@ -45,19 +45,18 @@ cv_detection/
 ├── requirements.txt
 ├── .gitignore
 ├── .github/workflows/validate.yml
+├── images/                   # тестовые JPEG (номера, коты, часы; test_1…3 для цветов)
+├── xml/                      # Haar-каскады OpenCV
+├── flower_photos/            # датасет цветов (скачать отдельно)
+├── model/                    # веса MobileNetV2 (скачать отдельно)
 └── notebooks/
-    ├── cv_flowers.ipynb      # классификация цветов
-    ├── cv_detection.ipynb    # детекция животных
-    ├── detect_goods.ipynb    # классификация овощей
-    ├── object_detection.ipynb  # Haar-каскады: номера, коты, часы
-    ├── haarcascade_*.xml     # каскады для object_detection
-    ├── number_*.jpg cat_*.jpg clock*.jpg
-    ├── flower_photos/        # датасет цветов (скачать отдельно)
-    ├── model/                # веса MobileNetV2 (скачать отдельно)
-    └── test_images/          # test_1.jpg … test_3.jpg для инференса
+    ├── cv_flowers.ipynb
+    ├── cv_detection.ipynb
+    ├── detect_goods.ipynb
+    └── object_detection.ipynb
 ```
 
-Пути в ноутбуках относительные (`./flower_photos/`, `./model/`, `./test_images`). Запускайте ячейки из каталога `notebooks/`, чтобы они совпали с кодом.
+В `notebooks/` лежат только `.ipynb`. Запускайте ячейки из каталога `notebooks/`: пути к данным идут на уровень выше (`../images`, `../xml`, `../flower_photos`, `../model`).
 
 ## Быстрый старт
 
@@ -74,26 +73,26 @@ jupyter notebook notebooks/
 
 ### Данные для классификации цветов
 
-Ноутбук `cv_flowers.ipynb` ожидает три локальных пути рядом с собой:
+Ноутбук `cv_flowers.ipynb` читает три локальных пути из корня репозитория:
 
-1. Датасет — см. [`notebooks/flower_photos/README.md`](notebooks/flower_photos/README.md)
-2. Веса MobileNetV2 — см. [`notebooks/model/README.md`](notebooks/model/README.md)
-3. Три тестовых JPEG — см. [`notebooks/test_images/README.md`](notebooks/test_images/README.md)
+1. Датасет TensorFlow Flowers — `flower_photos/<класс>/*.jpg` (daisy, dandelion, roses, sunflowers, tulips)
+2. Веса MobileNetV2 — `model/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_1.0_128_no_top.h5`
+3. Три тестовых JPEG — `images/test_1.jpg`, `images/test_2.jpg`, `images/test_3.jpg`
 
-Кратко из корня репозитория:
+Из корня репозитория:
 
 ```bash
 curl -L http://download.tensorflow.org/example_images/flower_photos.tgz -o /tmp/flower_photos.tgz
-tar -xzf /tmp/flower_photos.tgz -C notebooks
+tar -xzf /tmp/flower_photos.tgz -C .
 
-mkdir -p notebooks/model
+mkdir -p model
 curl -L "https://storage.googleapis.com/tensorflow/keras-applications/mobilenet_v2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_1.0_128_no_top.h5" \
-  -o notebooks/model/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_1.0_128_no_top.h5
+  -o model/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_1.0_128_no_top.h5
 ```
 
-Затем положите `test_1.jpg`, `test_2.jpg`, `test_3.jpg` в `notebooks/test_images/`.
+Затем положите `test_1.jpg`, `test_2.jpg`, `test_3.jpg` в `images/`. Сами датасет и веса `.h5` в git не входят.
 
-### Данные для детекции
+### Данные для детекции животных
 
 Animals-10 скачивается из ячейки через `kagglehub` (`alessiocorrado99/animals10`). Веса `yolov8n.pt` подтягивает Ultralytics при первом запуске. Для Kaggle может понадобиться [API-токен](https://github.com/Kaggle/kagglehub).
 
@@ -103,7 +102,12 @@ Vegetable Image Dataset скачивается из ячейки `detect_goods.i
 
 ### Данные для детекции объектов
 
-Для `object_detection.ipynb` в `notebooks/` уже лежат Haar-каскады и тестовые фото (`number_*.jpg`, `cat_*.jpg`, `clock*.jpg`). Дополнительно ничего скачивать не нужно.
+Для `object_detection.ipynb` уже лежат:
+
+- фото в [`images/`](images/) — `number_*.jpg`, `cat_*.jpg`, `clock*.jpg`
+- каскады в [`xml/`](xml/) — `haarcascade_russian_plate_number.xml`, `haarcascade_frontalcatface.xml`, `haarcascade_wallclock.xml`
+
+Дополнительно ничего скачивать не нужно.
 
 ## Ноутбук 1. Классификация цветов
 
@@ -111,12 +115,12 @@ Vegetable Image Dataset скачивается из ячейки `detect_goods.i
 
 Пайплайн:
 
-1. Загрузка изображений по папкам-классам
+1. Загрузка изображений по папкам-классам из `../flower_photos`
 2. Нормализация пикселей в `[0, 1]`, split 80/20 (`random_state=42`)
-3. MobileNetV2 без головы, `trainable=False`
+3. MobileNetV2 без головы, `trainable=False`, веса из `../model`
 4. Sequential: Flatten → Dense(64) → Dense(128) → Dense(64) → Dropout(0.5) → softmax
 5. Adam, `sparse_categorical_crossentropy`, 20 эпох, `batch_size=32`, вход 128×128
-6. Оценка на тесте, графики accuracy/loss, инференс на `test_images`
+6. Оценка на тесте, графики accuracy/loss, инференс на `../images/test_1.jpg` … `test_3.jpg`
 
 Зафиксированный результат прогона: **точность на тестовой выборке 85.56%**.
 
@@ -154,11 +158,9 @@ Vegetable Image Dataset скачивается из ячейки `detect_goods.i
 Пайплайн:
 
 1. Haar Cascade для российских автомобильных номеров
-2. Haar Cascade для морды кота (`haarcascade_frontalcatface.xml`)
+2. Haar Cascade для морды кота
 3. Предобработка кадра и детекция настенных часов
-4. Отрисовка bounding boxes на тестовых JPEG рядом с ноутбуком
-
-Каскады и фото лежат в `notebooks/`, пути в ячейках относительные.
+4. Отрисовка bounding boxes на фото из `../images`, каскады из `../xml`
 
 ## Зависимости
 
@@ -169,7 +171,7 @@ Vegetable Image Dataset скачивается из ячейки `detect_goods.i
 - детекция животных: Ultralytics, OpenCV, kagglehub
 - детекция объектов: OpenCV, Matplotlib
 
-Датасеты и веса в git не входят (см. [`.gitignore`](.gitignore)).
+Датасеты и веса в git не входят (см. [`.gitignore`](.gitignore)). Фото для Haar-детекции и XML-каскады — входят.
 
 ## Лицензия
 

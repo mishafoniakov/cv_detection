@@ -18,13 +18,9 @@ __pycache__/
 .ipynb_checkpoints/
 */.ipynb_checkpoints/
 
-# Datasets and local artifacts (keep README files)
-notebooks/flower_photos/*
-!notebooks/flower_photos/README.md
-notebooks/model/*
-!notebooks/model/README.md
-notebooks/test_images/*
-!notebooks/test_images/*.md
+# Datasets and local artifacts (download separately)
+flower_photos/
+model/
 *.h5
 *.pt
 *.pth
